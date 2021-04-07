@@ -63,7 +63,7 @@ class LineFollow(Node):
 			else:
 				x = (msg.m0_x0 - msg.m0_x1) / frame_width
 				y = (msg.m0_y0 - msg.m0_y1) / frame_height
-			if(msg.m0_x0 != msg.m0_x1):
+			if(msg.m0_x0 != msg.m0_x1 and y != 0):
 				steer = (-1) * (x / y)
 				speed = 1.1
 			else:
