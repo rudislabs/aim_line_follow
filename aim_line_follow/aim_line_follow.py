@@ -1,4 +1,4 @@
-# AIM Line Follow Example Code
+# AIM Line Follow Example Code - Python
 # 
 # This example code is meant to act as an example for simple line-following control
 # in NXP Cup Summer Camp and NXP AIM Challenge.
@@ -100,9 +100,6 @@ class LineFollow(Node):
         sleep(self.start_delay)
         self.get_logger().info('Started')
 
-        self.start_time = datetime.now().timestamp()
-        self.restart_time = True
-
         # Subscribers - subscribe to PixyVector topic at 10Hz
         self.pixy_subscriber = self.create_subscription(
             PixyVector,
@@ -133,21 +130,31 @@ class LineFollow(Node):
         # return number of vectors found.
         return num_vectors
 
+    def publish_controls(self, speed, steer):
+        # Set speed and steer values
+        # Vector3 format has x, y, z
+        # Speed is in X direction, steer is in Z rotation
+        self.speed_vector.x = float(speed*(1-np.abs(2.0*steer)))
+        self.steer_vector.z = float(steer) - float(0.05)
+
+        # Set linear and angular values of Twist() msg to speed and steer Vector3
+        self.cmd_vel.linear = self.speed_vector
+        self.cmd_vel.angular = self.steer_vector
+
+        # Publish our Twist() to the cmd_vel topic
+        self.cmd_vel_publisher.publish(self.cmd_vel)
+
     # listener_callback function
     # Self driving algorithm code goes here.
     # The 'msg' argument contains a PixyVector message with line information.
     def listener_callback(self, msg):
-        #TODO
-
-        # |                                                              |
-        # V Instantiate veriables for use in the self-driving algorithm. V
 
         # Current time for timestamping cmd_vel msg.
         current_time = datetime.now().timestamp() 
         
         # Frame width and height of the PixyVector frame
-        frame_width = 72
-        frame_height = 52
+        frame_width = 78
+        frame_height = 51
 
         # Center of Pixy frame on the X axis.
         window_center = (frame_width / 2)
@@ -163,7 +170,7 @@ class LineFollow(Node):
 
         # If num_vectors is 0...
         if(num_vectors == 0):  
-            # Algorithm to stop the car after 4 seconds of not seeing a line. Set speed and steer to 0
+            # Stop the car.
             speed = 0
             steer = 0
 
@@ -204,20 +211,8 @@ class LineFollow(Node):
             
             # Set speed to linear_velocity paramater
             speed = self.linear_velocity
-
-
-        # Set speed and steer values
-        # Vector3 format has x, y, z
-        # Speed is in X direction, steer is in Z rotation
-        self.speed_vector.x = float(speed*(1-np.abs(2.0*steer)))
-        self.steer_vector.z = float(steer) - float(0.05)
-
-        # Set linear and angular values of Twist() msg to speed and steer Vector3
-        self.cmd_vel.linear = self.speed_vector
-        self.cmd_vel.angular = self.steer_vector
-
-        # Publish our Twist() to the cmd_vel topic
-        self.cmd_vel_publisher.publish(self.cmd_vel)
+        
+        self.publish_controls(speed, steer)
 
 # Main function
 def main(args=None):
