@@ -107,6 +107,12 @@ class LineFollow(Node):
             self.listener_callback,
             10)
 
+        self.apriltag_subscriber = self.create_subscription(
+            AprilTagDetectionArray,
+            "/apriltag/detections",
+            self.apriltag_callback,
+            10)
+
         # Publishers - Create publisher object so we can apply speed and steer to the vehicle
         self.cmd_vel_publisher = self.create_publisher(Twist, '/cupcar0/cmd_vel', 10)
 
@@ -143,6 +149,11 @@ class LineFollow(Node):
 
         # Publish our Twist() to the cmd_vel topic
         self.cmd_vel_publisher.publish(self.cmd_vel)
+
+    def apriltag_callback(self, msg):
+        if(not msg.detections.empty()):
+            detection = msg.detections[0]
+            self.get_logger('Detection Found! ID: "%d"' % detection.id)
 
     # listener_callback function
     # Self driving algorithm code goes here.
