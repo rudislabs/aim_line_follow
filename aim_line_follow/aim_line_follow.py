@@ -23,6 +23,8 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Vector3
 from std_msgs.msg import Float64
 from nxp_cup_interfaces.msg import PixyVector
+from apriltag_msgs.msg import AprilTagDetectionArray
+from apriltag_msgs.msg import AprilTagDetection
 
 # Standard Python3 imports
 from time import sleep
@@ -151,7 +153,7 @@ class LineFollow(Node):
         self.cmd_vel_publisher.publish(self.cmd_vel)
 
     def apriltag_callback(self, msg):
-        if(not msg.detections.empty()):
+        if(not len(msg.detections) == 0):
             detection = msg.detections[0]
             self.get_logger('Detection Found! ID: "%d"' % detection.id)
 
@@ -187,9 +189,6 @@ class LineFollow(Node):
 
         # If one vector is found...
         if(num_vectors == 1):
-            if not self.restart_time:
-                self.start_time = datetime.now().timestamp()
-                self.restart_time = True
 
             # Find x/y values normalized to frame width and height 
             if(msg.m0_x1 > msg.m0_x0):
@@ -210,9 +209,6 @@ class LineFollow(Node):
 
         # If two vectors are found..
         if(num_vectors == 2):
-            if not self.restart_time:
-                self.start_time = datetime.now().timestamp()
-                self.restart_time = True
 
             # Find average of both top X values 
             m_x1 = (msg.m0_x1 + msg.m1_x1) / 2
