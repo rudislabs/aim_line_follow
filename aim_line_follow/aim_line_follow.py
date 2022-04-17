@@ -23,8 +23,6 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Vector3
 from std_msgs.msg import Float64
 from nxp_cup_interfaces.msg import PixyVector
-from apriltag_msgs.msg import AprilTagDetectionArray
-from apriltag_msgs.msg import AprilTagDetection
 
 # Standard Python3 imports
 from time import sleep
@@ -109,14 +107,9 @@ class LineFollow(Node):
             self.listener_callback,
             10)
 
-        self.apriltag_subscriber = self.create_subscription(
-            AprilTagDetectionArray,
-            "/apriltag/detections",
-            self.apriltag_callback,
-            10)
 
         # Publishers - Create publisher object so we can apply speed and steer to the vehicle
-        self.cmd_vel_publisher = self.create_publisher(Twist, '/cupcar0/cmd_vel', 10)
+        self.cmd_vel_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
 
         # Class variables for Speed, steer, and twist messages to package into cmd_vel topic
         self.speed_vector = Vector3()
@@ -142,8 +135,8 @@ class LineFollow(Node):
         # Set speed and steer values
         # Vector3 format has x, y, z
         # Speed is in X direction, steer is in Z rotation
-        self.speed_vector.x = float(speed*(1-np.abs(2.0*steer)))
-        self.steer_vector.z = float(steer) - float(0.05)
+        self.speed_vector.x = float(speed)
+        self.steer_vector.z = float(steer)
 
         # Set linear and angular values of Twist() msg to speed and steer Vector3
         self.cmd_vel.linear = self.speed_vector
@@ -152,10 +145,6 @@ class LineFollow(Node):
         # Publish our Twist() to the cmd_vel topic
         self.cmd_vel_publisher.publish(self.cmd_vel)
 
-    def apriltag_callback(self, msg):
-        if(not len(msg.detections) == 0):
-            detection = msg.detections[0]
-            self.get_logger('Detection Found! ID: "%d"' % detection.id)
 
     # listener_callback function
     # Self driving algorithm code goes here.
